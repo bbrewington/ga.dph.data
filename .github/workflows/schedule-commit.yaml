@@ -29,6 +29,9 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@master
 
+      - name: Install libraries needed by tidyverse on Ubuntu Linux
+        run: sudo apt install libcurl4-openssl-dev libssl-dev libxml2-dev
+
       - name: Query dependencies
         run: |
           install.packages('remotes')
