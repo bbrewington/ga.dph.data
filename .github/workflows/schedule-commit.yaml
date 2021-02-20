@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "0 8 * * *"
 
 jobs:
   generate-data:
@@ -29,8 +29,8 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@master
 
-      - name: Install libraries needed by tidyverse on Ubuntu Linux
-        run: sudo apt install libcurl4-openssl-dev libssl-dev libxml2-dev
+      - name: Install libraries needed by packages on Ubuntu Linux
+        run: sudo apt install libcurl4-openssl-dev libssl-dev libxml2-dev libpoppler-cpp-dev
 
       - name: Query dependencies
         run: |
