@@ -1,73 +1,24 @@
+name: GA-DPH-Vaccine-Orders-List
 on:
   schedule:
-    - cron: "0 8 * * *"
-
+    # 0th minute every 2 hours
+    - cron: '0 */2 * * *'
 jobs:
-  generate-data:
-    runs-on: ${{ matrix.config.os }}
-
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
-
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {os: ubuntu-latest,   r: 'release'}
-
-    env:
-      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      RSPM: ${{ matrix.config.rspm }}
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
+  Run-R-Script:
+    runs-on: macos-11.2
+    r-version: 4.0.3
     steps:
-      - uses: actions/checkout@v2
+      # this is a comment by the way, it won't hurt
+      - name: clone-repo-from-triggering-branch
+        uses: actions/checkout@v2
 
-      - uses: r-lib/actions/setup-r@master
+      - name: Set up R ${{r-version}}
+        uses: r-lib/actions/setup-R@v1
         with:
-          r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
+          r-version: ${{r-version}}
+        shell: bash
 
-      - uses: r-lib/actions/setup-pandoc@master
-
-      - name: Install libraries needed by packages on Ubuntu Linux
-        run: sudo apt install libcurl4-openssl-dev libssl-dev libxml2-dev libpoppler-cpp-dev
-
-      - name: Query dependencies
+      - name: Install Dependencies
         run: |
-          install.packages('remotes')
-          install.packages('sessioninfo')
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
-          writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
-        shell: Rscript {0}
-
-      - name: Cache R packages
-        uses: actions/cache@v1
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
-
-      - name: Install dependencies
-        run: |
-          remotes::install_deps(dependencies = TRUE)
-        shell: Rscript {0}
-
-      - name: Get data
-        run: |
-          source("R/get_ga_dph_vaccine_orders_list.R")
-        shell: Rscript {0}
-
-      - name: Commit files
-        run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          git add --all
-          git commit -am "add data"
-          git push
-
-      - name: Session info
-        run: |
-          options(width = 100)
-          pkgs <- installed.packages()[, "Package"]
-          sessioninfo::session_info(pkgs, include_base = TRUE)
+          install.packages(c("tidyverse","pdftools","assertthat"))
         shell: Rscript {0}
