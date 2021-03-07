@@ -1,24 +1,34 @@
-name: GA-DPH-Vaccine-Orders-List
-on:
-  schedule:
-    # 0th minute every 2 hours
-    - cron: '0 */2 * * *'
+on: push
+
 jobs:
-  Run-R-Script:
-    runs-on: macos-11.2
-    r-version: 4.0.3
+  download-and-upload:
+    name: Runner
+    runs-on: ubuntu-18.04
+
     steps:
-      # this is a comment by the way, it won't hurt
-      - name: clone-repo-from-triggering-branch
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@master
 
-      - name: Set up R ${{r-version}}
-        uses: r-lib/actions/setup-R@v1
+      - name: Install R
+        uses: r-lib/actions/setup-r@v1
         with:
-          r-version: ${{r-version}}
-        shell: bash
+            r-version: '4.0.3' # The R version to download (if necessary) and use.
 
-      - name: Install Dependencies
+      - name: Install dev lib dependencies
         run: |
+          sudo apt-get install libpoppler-cpp-dev # used by 'pdftools'
+          sudo apt-get install libcurl4-openssl-dev # used by 'tidyverse'
+
+      - name: Install R dependencies
+        run: |
+          install.packages("remotes")
+          remotes::install_cran("tidyverse")
+          remotes::install_cran("pdftools")
+          remotes::install_cran("assertthat")
           install.packages(c("tidyverse","pdftools","assertthat"))
+        shell: Rscript {0}
+
+      - name: Download and process the PDF
+        run: |
+          source("R/get_ga_dph_vaccine_orders_list.R")
         shell: Rscript {0}
